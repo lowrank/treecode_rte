@@ -36,8 +36,10 @@ int main() {
     index_t nChebyshev = 4;
     index_t rank = nChebyshev * nChebyshev;
     index_t maxLevel = 4;
+    scalar_t MAC = 0.25;
 
-    auto tc_rte = treecode_rte(time_steps, T, nChebyshev, source, nSource, rank, maxLevel);
+
+    auto tc_rte = treecode_rte(time_steps, T, nChebyshev, source, nSource, rank, maxLevel, MAC);
 
 
 }
