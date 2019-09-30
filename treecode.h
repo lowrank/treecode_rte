@@ -416,6 +416,23 @@ public:
         }
     }
 
+    void reset(index_t rootId = 0) {
+        if (rootId < 0)
+            return;
+        node &n = t.dict[rootId];
+
+        n.chargeComputed = false;
+        n.scaledCnode.clear();
+        setValue(n.nodeCharge, 0.);
+        setValue(n.nodePotential, 0.);
+        setValue(n.potential, 0.);
+        setValue(n.R, 0.);
+
+        for (index_t i = 0; i < 4; ++i) {
+            reset(n.child[i]);
+        }
+    }
+
     void upPass(index_t rootId = 0) {
         node &n = t.dict[rootId];
         n.scaledCnode.clear();

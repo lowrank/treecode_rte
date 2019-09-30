@@ -6,20 +6,20 @@
  * The spatial resolution is set as dx = 1/64, 1/128, 1/256, 1/512.
  * The Chebyshev nodes are using nc = 4, 6, 8.
  *
- * The parameter can be changed through config file eventually. h < dx is required to avoid keep maximum principle.
+ * The parameter can be changed through config file eventually. h < dx is required to keep maximum principle.
  */
 
 int main() {
     /*
      * time setting
      */
-    index_t time_steps = 512;
-    scalar_t T = 1.0;
+    index_t time_steps = 1;
+    scalar_t T = 1.0/512;
 
     /*
      * domain setting
      */
-    int N = 64;
+    int N = 256;
     scalar_t dx = 1.0/N;
     index_t nSource = N * N;
     vector<point> source(nSource);
@@ -35,11 +35,15 @@ int main() {
      */
     index_t nChebyshev = 4;
     index_t rank = nChebyshev * nChebyshev;
-    index_t maxLevel = 4;
-    scalar_t MAC = 0.25;
+    index_t maxLevel = 10;
+    scalar_t MAC = 0.75;
 
 
-    auto tc_rte = treecode_rte(time_steps, T, nChebyshev, source, nSource, rank, maxLevel, MAC);
+    auto tc_rte = treecode_rte(time_steps, T, N, nChebyshev, source, nSource, rank, maxLevel, MAC);
+
+    RUN("COMPUTE", tc_rte.compute());
+
+    std::cout << tc_rte.solution[0] << std::endl;
 
 
 }

@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH ${CMakeScripts_MODULE_DIR})
 
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -DMATLAB_MEX_FILE -DRUN_OMP  \
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE} -Ofast -DMATLAB_MEX_FILE -DRUN_OMP -DDISP \
     -D_GNU_SOURCE -fPIC -fno-omit-frame-pointer -Wno-write-strings -pthread -DMX_COMPAT_32 \
     -fomit-frame-pointer -malign-double -fstrict-aliasing -march=native -std=gnu++11 -fopenmp -ffast-math")
 
