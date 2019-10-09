@@ -25,16 +25,13 @@ treecode_rte::treecode_rte(index_t _time_steps, scalar_t _T,  index_t _N, index_
     rank = _rank;
     maxLevel = _maxLevel;
 
-
-
     Vector charge(nSource);
-    setValue(charge, 1.0);
+    setValue(charge, 0.0);
 
     tc.initalize(_nChebyshev, _source, charge, nSource, rank, maxLevel);
     tc.upPass(0);
 
     rhs.resize(time_steps);
-//    f_source.resize(time_steps);
     solution.resize(time_steps);
 
     // set mu_t
@@ -42,27 +39,38 @@ treecode_rte::treecode_rte(index_t _time_steps, scalar_t _T,  index_t _N, index_
     mu_s.resize(nSource);
     for (int i = 0; i < nSource; ++i) {
         mu_t[i] = 2.2;
-        mu_s[i] = 2.0;
-    } // row major
+        mu_s[i] = 2.0; // or set according to point_id
+    }
+
+    sourceFunc = [&](scalar_t t, point& p) {
+        scalar_t cx = 0.5 + 0.2 * cos(2 * M_PI * t);
+        scalar_t cy = 0.5 + 0.2 * sin(2 * M_PI * t);
+        scalar_t r = sqrt(SQR(p.x-cx) + SQR(p.y-cy));
+        if ( r <= 0.2) {
+            return  4 * SQR(t) * (1 + cos(r * M_PI * 5))/2.0;
+        }
+        else{
+            return 0.;
+        }
+    };
+
+    kappa = kernel(tc.t.sourceTree[0], tc.t.sourceTree[0]);
 
 }
 
 void treecode_rte::compute() {
     for (index_t step = 0; step < time_steps; ++step) {
-        // each step calculates the solution on the time interval [step * dt, (step + 1) * dt]
+        // each step calculates the solution on the time interval {step * dt}
         std::cout << "time step: " << step << std::endl;
-        // set f here
+
         Vector charge(nSource);
-        setValue(charge, 1.0);
+
+        for (index_t point_id = 0; point_id < nSource;++point_id) {
+            charge(point_id) = sourceFunc(step * h, tc.t.sourceTree[point_id]);
+        }
+
         rhs[step].initalize(nChebshev, tc.t.sourceTree, charge, nSource, rank, maxLevel);
         rhs[step].upPass(0);
-
-        rhs[step].reset(0);
-        setValue(charge, 2.0);
-        rhs[step].chargeTree = charge;
-        
-        rhs[step].upPass(0);
-
         solution[step].resize(nSource);
 
 #ifdef RUN_OMP
@@ -70,9 +78,15 @@ void treecode_rte::compute() {
 #endif
         for (index_t point_id = 0; point_id < nSource; ++point_id) {
             // for each point, compute the interaction between this point and other point clusters.
-            solution[step](point_id) = interaction(step, point_id, 0);
+            solution[step](point_id) = interaction(step, point_id, 0) / (1 - kappa * mu_s[point_id]); // multiply a factor
             // update rhs for the next step.
         }
+
+        rhs[step].reset(0);
+        for (index_t point_id = 0; point_id < nSource;++point_id) {
+            rhs[step].chargeTree(point_id) = charge(point_id) +  mu_s[point_id] * solution[step](point_id);
+        }
+        rhs[step].upPass(0);
     }
 }
 
@@ -326,6 +340,22 @@ scalar_t treecode_rte::kernel(point &r0, point &r1) {
     integral_block(dx - l / 2, dy + l / 2) - integral_block(dx + l / 2, dy - l / 2));
     return exp(-getIntegral(r0.x, r0.y, r1.x, r1.y)) * f / (2 * M_PI);
 }
+
+void treecode_rte::output(std::string &filename) {
+    std::ofstream File;
+    File.open(filename);
+
+    for (index_t step = 0; step < time_steps; ++step) {
+        for (index_t i = 0; i < tc.t.nSource; ++i) {
+            File << solution[step](i) << " ";
+        }
+        File << "\n";
+    }
+    File.close();
+}
+
+
+
 
 treecode_rte::~treecode_rte() = default;
 

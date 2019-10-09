@@ -16,6 +16,9 @@ public:
     index_t  N;
     scalar_t MAC;
     index_t nChebshev;
+    scalar_t kappa;
+
+
 
     TreeCode tc;
     index_t nSource;
@@ -25,7 +28,7 @@ public:
     vector<scalar_t> mu_t; // predefined.
     vector<scalar_t> mu_s; // predefined.
 
-    std::function<scalar_t (scalar_t, point&)> f; // only mid-point samples are needed
+    std::function<scalar_t (scalar_t, point&)> sourceFunc; // only mid-point samples are needed
 
     vector<TreeCode> rhs;
     vector<Vector> solution;
@@ -44,6 +47,8 @@ public:
     scalar_t getAttribute(scalar_t x, scalar_t y);
     scalar_t integral_block(scalar_t a, scalar_t b);
     scalar_t kernel(point& r0, point& r1);
+
+    void output(std::string& filename);
 
 };
 

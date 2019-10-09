@@ -13,13 +13,13 @@ int main() {
     /*
      * time setting
      */
-    index_t time_steps = 1;
-    scalar_t T = 1.0/512;
+    index_t time_steps = 150;
+    scalar_t T = 1.0;
 
     /*
      * domain setting
      */
-    int N = 256;
+    int N = 128;
     scalar_t dx = 1.0/N;
     index_t nSource = N * N;
     vector<point> source(nSource);
@@ -36,14 +36,14 @@ int main() {
     index_t nChebyshev = 4;
     index_t rank = nChebyshev * nChebyshev;
     index_t maxLevel = 10;
-    scalar_t MAC = 0.75;
+    scalar_t MAC = 0.5;
 
 
     auto tc_rte = treecode_rte(time_steps, T, N, nChebyshev, source, nSource, rank, maxLevel, MAC);
 
     RUN("COMPUTE", tc_rte.compute());
 
-    std::cout << tc_rte.solution[0] << std::endl;
+    tc_rte.output("solution.txt");
 
 
 }
