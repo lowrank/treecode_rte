@@ -30,7 +30,3 @@
 *.exe
 *.out
 *.app
-*.cfg
-./data/*
-./bbfmm/*
-
