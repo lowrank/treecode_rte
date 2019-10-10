@@ -11,11 +11,11 @@ treecode_rte::treecode_rte(index_t _time_steps, scalar_t _T,  index_t _N, index_
      * at each time step, solve a forward stepping based on the treecode algorithm.
      * the previous treecode structures are stored.
      */
-    time_steps = _time_steps;
+    time_steps = _time_steps + 1;
     T = _T;
-    h = T/time_steps; // h is the time step, should be less than the spatial resolution.
+    h = T/(time_steps - 1); // h is the time step, should be less than the spatial resolution.
 
-    assert(h < 1.0/N);
+    assert(h <= 1.0/N);
 
     N = _N;
     MAC = _MAC;
@@ -38,20 +38,17 @@ treecode_rte::treecode_rte(index_t _time_steps, scalar_t _T,  index_t _N, index_
     mu_t.resize(nSource);
     mu_s.resize(nSource);
     for (int i = 0; i < nSource; ++i) {
-        mu_t[i] = 2.2;
-        mu_s[i] = 2.0; // or set according to point_id
+        mu_t[i] = 5.2;
+        mu_s[i] = 5.0; // or set according to point_id
     }
 
     sourceFunc = [&](scalar_t t, point& p) {
-        scalar_t cx = 0.5 + 0.2 * cos(2 * M_PI * t);
-        scalar_t cy = 0.5 + 0.2 * sin(2 * M_PI * t);
-        scalar_t r = sqrt(SQR(p.x-cx) + SQR(p.y-cy));
-        if ( r <= 0.2) {
-            return  4 * SQR(t) * (1 + cos(r * M_PI * 5))/2.0;
-        }
-        else{
-            return 0.;
-        }
+        scalar_t cx = 0.5 + 0.2 * cos(4 * M_PI * t);
+        scalar_t cy = 0.5 + 0.2 * sin(4 * M_PI * t);
+        scalar_t r2 = (SQR(p.x-cx) + SQR(p.y-cy));
+
+        return  4 * SQR(t) * exp(-r2 * 40);
+
     };
 
     kappa = kernel(tc.t.sourceTree[0], tc.t.sourceTree[0]);
@@ -341,7 +338,7 @@ scalar_t treecode_rte::kernel(point &r0, point &r1) {
     return exp(-getIntegral(r0.x, r0.y, r1.x, r1.y)) * f / (2 * M_PI);
 }
 
-void treecode_rte::output(std::string &filename) {
+void treecode_rte::output(const std::string filename) {
     std::ofstream File;
     File.open(filename);
 

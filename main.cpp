@@ -1,4 +1,5 @@
 #include "treecode_rte.h"
+#include "utility/config.h"
 
 /*
  * Computational domain is set as [0, 1]^2. light speed is normalized as 1.
@@ -6,20 +7,41 @@
  * The spatial resolution is set as dx = 1/64, 1/128, 1/256, 1/512.
  * The Chebyshev nodes are using nc = 4, 6, 8.
  *
- * The parameter can be changed through config file eventually. h < dx is required to keep maximum principle.
+ * The parameter can be changed through config file eventually. h <= dx is required to keep maximum principle.
  */
 
-int main() {
+int main(int argc, char *argv[]) {
+#ifdef RUN_OMP
+    omp_set_num_threads(omp_get_max_threads());
+
+#endif
+
+    if (argc <= 1) {
+        std::cout << "USE " << argv[0] << " PATH OF CONFIG FILE " << std::endl;
+        exit(0);
+    }
+
+
+    config cfg;
+    std::ifstream cfgFile;
+
+    cfgFile.open(argv[1], std::ifstream::in);
+    cfg.parse(cfgFile);
+    cfgFile.close();
+
+    cfg.print();
+
+
     /*
      * time setting
      */
-    index_t time_steps = 150;
-    scalar_t T = 1.0;
+    index_t time_steps = atoi(cfg.options["time_step"].c_str());
+    scalar_t T = atof(cfg.options["T"].c_str());
 
     /*
      * domain setting
      */
-    int N = 128;
+    int N = atoi(cfg.options["N"].c_str());
     scalar_t dx = 1.0/N;
     index_t nSource = N * N;
     vector<point> source(nSource);
@@ -33,17 +55,22 @@ int main() {
     /*
      * algorithm setting
      */
-    index_t nChebyshev = 4;
+    index_t nChebyshev = atoi(cfg.options["Cheb"].c_str());
     index_t rank = nChebyshev * nChebyshev;
-    index_t maxLevel = 10;
-    scalar_t MAC = 0.5;
+    index_t maxLevel = atoi(cfg.options["maxLevel"].c_str());
+    scalar_t MAC = atof(cfg.options["MAC"].c_str());
 
 
     auto tc_rte = treecode_rte(time_steps, T, N, nChebyshev, source, nSource, rank, maxLevel, MAC);
 
     RUN("COMPUTE", tc_rte.compute());
 
-    tc_rte.output("solution.txt");
+
+    std::string outputFile = cfg.options["output_dir"] + "solution-T-" \
+                + std::to_string(T) + "-step-"+std::to_string(time_steps)+"-N-"+std::to_string(N) + "-nC-" + std::to_string(nChebyshev) \
+                + "-MAC-"+std::to_string(MAC) + ".txt";
+
+    tc_rte.output(outputFile);
 
 
 }

@@ -48,7 +48,7 @@ public:
     scalar_t integral_block(scalar_t a, scalar_t b);
     scalar_t kernel(point& r0, point& r1);
 
-    void output(std::string& filename);
+    void output(const std::string filename);
 
 };
 

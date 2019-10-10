@@ -138,7 +138,8 @@ public:
         for (index_t i = 0; i < nSource; ++i) {
             dict[root].sourceIndex[i] = i;
         }
-        RUN("initialization", assignChildren(root, _maxLevel));
+
+        assignChildren(root, _maxLevel);
     }
 
 protected:
