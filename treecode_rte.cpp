@@ -123,9 +123,7 @@ scalar_t treecode_rte::interaction(index_t step, index_t pointId, index_t rootId
         Vector r_weights(tc.t.dict[rootId].nSource);
         Vector l_charge(tc.t.dict[rootId].nSource);
         Vector r_charge(tc.t.dict[rootId].nSource);
-
-        Vector m_weights(tc.t.dict[rootId].nSource);
-        Vector m_charge(tc.t.dict[rootId].nSource);
+        
 
         for (int i = 0; i < tc.t.dict[rootId].nSource;++i) {
             auto id = tc.t.dict[rootId].sourceIndex[i];
@@ -135,11 +133,8 @@ scalar_t treecode_rte::interaction(index_t step, index_t pointId, index_t rootId
             scalar_t alpha = _dist / h - floor(_dist / h);
 
             scalar_t theta = kernel(tc.t.sourceTree[pointId], tc.t.sourceTree[id]);
-//            l_weights(i) = theta * (1-alpha);
-//            r_weights(i) = theta * (alpha);
-            l_weights(i) = theta * (alpha - 1) * (alpha - 2) / 2.0;
-            r_weights(i) = -theta * alpha * (alpha - 2);
-            m_weights(i) = theta * alpha * (alpha - 1) / 2.0;
+            l_weights(i) = theta * (1 - alpha);
+            r_weights(i) = theta * (alpha);
 
             if (l_step >= 0) {
                 l_charge(i) = rhs[l_step].t.dict[rootId].charge(i);
@@ -154,16 +149,8 @@ scalar_t treecode_rte::interaction(index_t step, index_t pointId, index_t rootId
             else {
                 r_charge(i) = 0.;
             }
-
-            if (l_step - 2 >= 0) {
-                m_charge(i) = rhs[l_step - 2].t.dict[rootId].charge(i);
-            } else {
-                m_charge(i) = 0.;
-            }
-
         }
-        return ddot(l_weights, l_charge) + ddot(r_weights, r_charge) \
- + ddot(m_weights, m_charge);
+        return ddot(l_weights, l_charge) + ddot(r_weights, r_charge);
 
     }
     else if (diam/dist < MAC) {
